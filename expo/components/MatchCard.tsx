@@ -6,17 +6,24 @@ import Colors from "@/constants/colors";
 import { getTeam, GoalEvent, Match } from "@/constants/tournament";
 import LivePulse from "@/components/LivePulse";
 
-function formatKickoff(iso: string): string {
+function formatTime(iso: string, tz: string, label: string): string {
   const d = new Date(iso);
-  const weekday = d.toLocaleString("en-US", { weekday: "short", timeZone: "America/New_York" });
-  const month = d.toLocaleString("en-US", { month: "short", timeZone: "America/New_York" });
-  const day = d.toLocaleString("en-US", { day: "numeric", timeZone: "America/New_York" });
+  const weekday = d.toLocaleString("en-US", { weekday: "short", timeZone: tz });
+  const month = d.toLocaleString("en-US", { month: "short", timeZone: tz });
+  const day = d.toLocaleString("en-US", { day: "numeric", timeZone: tz });
   const time = d.toLocaleString("en-US", {
     hour: "numeric",
     minute: "2-digit",
-    timeZone: "America/New_York",
+    timeZone: tz,
   });
-  return `${weekday}, ${month} ${day} · ${time} ET`;
+  return `${weekday}, ${month} ${day} · ${time} ${label}`;
+}
+
+function formatKickoff(iso: string): { et: string; ist: string } {
+  return {
+    et: formatTime(iso, "America/New_York", "ET"),
+    ist: formatTime(iso, "Asia/Kolkata", "IST"),
+  };
 }
 
 function useCountdown(targetISO: string): string {
@@ -155,7 +162,12 @@ function MatchCardBase({ match }: { match: Match }) {
       <View style={styles.footer}>
         <View style={styles.footerRow}>
           <Text style={styles.dateTime} numberOfLines={1}>
-            {formatKickoff(match.kickoff)}
+            {formatKickoff(match.kickoff).et}
+          </Text>
+        </View>
+        <View style={styles.footerRow}>
+          <Text style={styles.dateTimeIst} numberOfLines={1}>
+            {formatKickoff(match.kickoff).ist}
           </Text>
         </View>
         <Text style={styles.venue} numberOfLines={1}>
@@ -322,12 +334,17 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.border,
   },
   footerRow: {
-    marginBottom: 4,
+    marginBottom: 2,
   },
   dateTime: {
     color: Colors.textMuted,
     fontSize: 11,
     fontWeight: "700",
+  },
+  dateTimeIst: {
+    color: Colors.textDim,
+    fontSize: 11,
+    fontWeight: "600",
   },
   venue: {
     color: Colors.textDim,
