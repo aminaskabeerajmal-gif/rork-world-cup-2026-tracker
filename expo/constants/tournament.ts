@@ -116,6 +116,81 @@ export const TEAMS: Team[] = [
 
 export const GROUPS: string[] = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 
+/** Forward/attacking players seeded into the Golden Boot race for each of the 48 teams. */
+export const FORWARD_PLAYERS: Record<string, string[]> = {
+  // ─── Group A ───
+  mex: ["Santiago Gimenez", "Hirving Lozano", "Raul Jimenez"],
+  rsa: ["Lyle Foster", "Percy Tau"],
+  kor: ["Son Heung-min", "Hwang Hee-chan", "Cho Gue-sung"],
+  cze: ["Patrik Schick", "Adam Hlozek", "Tomas Chory"],
+
+  // ─── Group B ───
+  can: ["Jonathan David", "Cyle Larin", "Alphonso Davies"],
+  bih: ["Edin Dzeko", "Ermedin Demirovic"],
+  qat: ["Almoez Ali", "Akram Afif"],
+  sui: ["Breel Embolo", "Zeki Amdouni", "Noah Okafor"],
+
+  // ─── Group C ───
+  bra: ["Vinicius Jr", "Rodrygo", "Raphinha", "Endrick"],
+  mar: ["Youssef En-Nesyri", "Hakim Ziyech", "Brahim Diaz"],
+  hai: ["Frantzdy Pierrot", "Duckens Nazon"],
+  sco: ["Che Adams", "Lawrence Shankland"],
+
+  // ─── Group D ───
+  usa: ["Christian Pulisic", "Folarin Balogun", "Timothy Weah"],
+  par: ["Miguel Almiron", "Julio Enciso"],
+  aus: ["Nestory Irankunda", "Mitchell Duke"],
+  tur: ["Kenan Yildiz", "Baris Alper Yilmaz", "Arda Guler"],
+
+  // ─── Group E ───
+  ger: ["Jamal Musiala", "Florian Wirtz", "Kai Havertz"],
+  cuw: ["Rangelo Janga", "Juninho Bacuna"],
+  civ: ["Sebastien Haller", "Nicolas Pepe", "Simon Adingra"],
+  ecu: ["Enner Valencia", "Jeremy Sarmiento"],
+
+  // ─── Group F ───
+  ned: ["Cody Gakpo", "Memphis Depay", "Xavi Simons"],
+  jpn: ["Takefusa Kubo", "Kaoru Mitoma", "Ayase Ueda"],
+  swe: ["Alexander Isak", "Viktor Gyokeres", "Dejan Kulusevski"],
+  tun: ["Youssef Msakni", "Haithem Jouini"],
+
+  // ─── Group G ───
+  bel: ["Romelu Lukaku", "Jeremy Doku", "Lois Openda"],
+  egy: ["Mohamed Salah", "Omar Marmoush", "Mostafa Mohamed"],
+  irn: ["Mehdi Taremi", "Sardar Azmoun"],
+  nzl: ["Chris Wood", "Ben Waine"],
+
+  // ─── Group H ───
+  esp: ["Lamine Yamal", "Alvaro Morata", "Nico Williams", "Dani Olmo"],
+  cpv: ["Bebe", "Ryan Mendes"],
+  ksa: ["Salem Al-Dawsari", "Firas Al-Buraikan"],
+  uru: ["Darwin Nunez", "Federico Valverde", "Facundo Pellistri"],
+
+  // ─── Group I ───
+  fra: ["Kylian Mbappe", "Ousmane Dembele", "Marcus Thuram", "Bradley Barcola"],
+  sen: ["Sadio Mane", "Nicolas Jackson", "Ismaila Sarr"],
+  irq: ["Aymen Hussein", "Mohanad Ali"],
+  nor: ["Erling Haaland", "Martin Odegaard", "Alexander Sorloth"],
+
+  // ─── Group J ───
+  arg: ["Lionel Messi", "Julian Alvarez", "Lautaro Martinez"],
+  alg: ["Riyad Mahrez", "Amine Gouiri", "Baghdad Bounedjah"],
+  aut: ["Marcel Sabitzer", "Michael Gregoritsch", "Marko Arnautovic"],
+  jor: ["Musa Al-Taamari", "Yazan Al-Naimat"],
+
+  // ─── Group K ───
+  por: ["Cristiano Ronaldo", "Rafael Leao", "Diogo Jota", "Joao Felix"],
+  cod: ["Yoane Wissa", "Silas Katompa Mvumpa"],
+  uzb: ["Eldor Shomurodov", "Abbosbek Fayzullaev"],
+  col: ["Luis Diaz", "Jhon Duran", "James Rodriguez"],
+
+  // ─── Group L ───
+  eng: ["Harry Kane", "Bukayo Saka", "Phil Foden", "Jude Bellingham"],
+  cro: ["Andrej Kramaric", "Ivan Perisic", "Josko Gvardiol"],
+  gha: ["Mohammed Kudus", "Jordan Ayew", "Antoine Semenyo"],
+  pan: ["Ismael Diaz", "Jose Fajardo"],
+};
+
 export const getTeam = (id: string): Team | undefined =>
   TEAMS.find((t) => t.id === id);
 
@@ -453,10 +528,27 @@ export const BRACKET: { round: string; matches: BracketMatch[] }[] = [
   },
 ];
 
-/** Compute golden boot standings from all matches with goal data. */
+/**
+ * Compute golden boot standings from all matches with goal data,
+ * seeded with forward players from every team at 0 goals.
+ */
 export function computeGoldenBoot(matches: Match[]): GoldenBootEntry[] {
   const map = new Map<string, GoldenBootEntry>();
 
+  // Seed every team's forwards at 0 goals
+  for (const team of TEAMS) {
+    const forwards = FORWARD_PLAYERS[team.id];
+    if (forwards) {
+      for (const name of forwards) {
+        const key = `${team.id}::${name}`;
+        if (!map.has(key)) {
+          map.set(key, { playerName: name, teamId: team.id, goalIds: [], goals: 0 });
+        }
+      }
+    }
+  }
+
+  // Merge in actual goal data from matches
   for (const m of matches) {
     for (const g of m.goals) {
       const key = `${g.teamId}::${g.playerName}`;
@@ -470,5 +562,5 @@ export function computeGoldenBoot(matches: Match[]): GoldenBootEntry[] {
     }
   }
 
-  return Array.from(map.values()).sort((a, b) => b.goals - a.goals);
+  return Array.from(map.values()).sort((a, b) => b.goals - a.goals || a.playerName.localeCompare(b.playerName));
 }

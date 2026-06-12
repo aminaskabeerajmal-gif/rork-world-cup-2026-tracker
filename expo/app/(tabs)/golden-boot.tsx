@@ -16,8 +16,10 @@ export default function GoldenBootScreen() {
 
   const standings = useMemo(() => computeGoldenBoot(matches), [matches]);
 
+  const hasAnyGoals = useMemo(() => standings.some((e) => e.goals > 0), [standings]);
+
   const leaders = useMemo(() => {
-    if (standings.length === 0) return [];
+    if (standings.length === 0 || standings[0].goals === 0) return [];
     const top = standings[0].goals;
     return standings.filter((e) => e.goals === top);
   }, [standings]);
@@ -35,7 +37,7 @@ export default function GoldenBootScreen() {
             <Text style={styles.bootEmoji}>👟</Text>
             <Text style={styles.leaderEmptyTitle}>No goals yet</Text>
             <Text style={styles.leaderEmptySub}>
-              Goal scorers will appear once matches are played and goals are recorded.
+              Forwards from all 48 teams are in the race. Goals will appear as matches are played.
             </Text>
           </View>
         ) : leaders.length === 1 ? (
@@ -80,7 +82,7 @@ export default function GoldenBootScreen() {
       >
         {standings.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>No goals recorded yet.</Text>
+            <Text style={styles.emptyText}>No players in the race.</Text>
           </View>
         ) : (
           standings.map((entry, index) => {
