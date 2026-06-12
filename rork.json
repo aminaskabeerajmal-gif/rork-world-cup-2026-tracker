@@ -1,10 +1,15 @@
 {
+  "$schema": "https://rork.com/schema/rork.json",
   "apps": [
     {
       "name": "FootballTracker",
       "path": "expo",
       "framework": "react-native"
+    },
+    {
+      "name": "FootballTracker Web",
+      "path": "web",
+      "framework": "web"
     }
-  ],
-  "$schema": "https://rork.com/schema/rork.json"
+  ]
 }
