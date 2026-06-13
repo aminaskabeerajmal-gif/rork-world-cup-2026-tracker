@@ -48,19 +48,23 @@ type ScorerSummary = {
   teamId: string;
   count: number;
   side: "home" | "away";
+  minutes: number[];
 };
 
-function groupGoals(goals: GoalEvent[]): ScorerSummary[] {
+function groupGoals(goals: GoalEvent[], side: "home" | "away"): ScorerSummary[] {
   const map = new Map<string, ScorerSummary>();
-  goals.forEach((g) => {
-    const key = `${g.playerName}__${g.teamId}`;
-    const existing = map.get(key);
-    if (existing) {
-      existing.count++;
-    } else {
-      map.set(key, { playerName: g.playerName, teamId: g.teamId, count: 1, side: g.side });
-    }
-  });
+  goals
+    .filter((g) => g.side === side)
+    .forEach((g) => {
+      const key = `${g.playerName}__${g.teamId}`;
+      const existing = map.get(key);
+      if (existing) {
+        existing.count++;
+        existing.minutes.push(g.minute);
+      } else {
+        map.set(key, { playerName: g.playerName, teamId: g.teamId, count: 1, side: g.side, minutes: [g.minute] });
+      }
+    });
   return Array.from(map.values()).sort((a, b) => b.count - a.count || a.playerName.localeCompare(b.playerName));
 }
 
@@ -99,7 +103,8 @@ function MatchCardBase({ match }: { match: Match }) {
 
   const liveMinute = useLiveMinute(match.kickoff, isLive);
 
-  const scorers = useMemo(() => (hasGoals ? groupGoals(match.goals) : []), [match.goals, hasGoals]);
+  const homeScorers = useMemo(() => (hasGoals ? groupGoals(match.goals, "home") : []), [match.goals, hasGoals]);
+  const awayScorers = useMemo(() => (hasGoals ? groupGoals(match.goals, "away") : []), [match.goals, hasGoals]);
 
   const handlePress = () => {
     router.push(`/live/${match.id}`);
@@ -129,11 +134,27 @@ function MatchCardBase({ match }: { match: Match }) {
       </View>
 
       <View style={styles.body}>
-        <View style={styles.side}>
-          <Text style={styles.flag}>{home.flag}</Text>
-          <Text style={[styles.team, homeWin && styles.teamWin]} numberOfLines={1}>
-            {home.name}
-          </Text>
+        <View style={[styles.side, styles.sideColumn]}>
+          <View style={styles.teamRow}>
+            <Text style={styles.flag}>{home.flag}</Text>
+            <Text style={[styles.team, homeWin && styles.teamWin]} numberOfLines={1}>
+              {home.name}
+            </Text>
+          </View>
+          {hasGoals && homeScorers.length > 0 && (
+            <View style={styles.scorersInline}>
+              {homeScorers.map((s) => (
+                <View key={`h_${s.teamId}_${s.playerName}`} style={styles.scorerInlineRow}>
+                  <Text style={styles.scorerInlineName} numberOfLines={1}>{s.playerName}</Text>
+                  {s.minutes.length === 1 ? (
+                    <Text style={styles.scorerMinute}>{s.minutes[0]}&apos;</Text>
+                  ) : (
+                    <Text style={styles.scorerMinute}>{s.minutes.join("&apos;, ")}&apos;</Text>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         <View style={styles.scoreBox}>
@@ -148,35 +169,29 @@ function MatchCardBase({ match }: { match: Match }) {
           )}
         </View>
 
-        <View style={[styles.side, styles.sideRight]}>
-          <Text style={[styles.team, styles.teamRight, awayWin && styles.teamWin]} numberOfLines={1}>
-            {away.name}
-          </Text>
-          <Text style={styles.flag}>{away.flag}</Text>
+        <View style={[styles.side, styles.sideColumn, styles.sideRight]}>
+          <View style={[styles.teamRow, styles.teamRowRight]}>
+            <Text style={[styles.team, styles.teamRight, awayWin && styles.teamWin]} numberOfLines={1}>
+              {away.name}
+            </Text>
+            <Text style={styles.flag}>{away.flag}</Text>
+          </View>
+          {hasGoals && awayScorers.length > 0 && (
+            <View style={[styles.scorersInline, styles.scorersInlineRight]}>
+              {awayScorers.map((s) => (
+                <View key={`a_${s.teamId}_${s.playerName}`} style={[styles.scorerInlineRow, styles.scorerInlineRowRight]}>
+                  {s.minutes.length === 1 ? (
+                    <Text style={styles.scorerMinute}>{s.minutes[0]}&apos;</Text>
+                  ) : (
+                    <Text style={styles.scorerMinute}>{s.minutes.join("&apos;, ")}&apos;</Text>
+                  )}
+                  <Text style={styles.scorerInlineName} numberOfLines={1}>{s.playerName}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </View>
-
-      {hasGoals && scorers.length > 0 && (
-        <View style={styles.scorersSection}>
-          <View style={styles.scorersDivider} />
-          <View style={styles.scorersWrap}>
-            {scorers.map((s) => {
-              const gTeam = getTeam(s.teamId);
-              return (
-                <View key={`${s.teamId}_${s.playerName}`} style={styles.scorerRow}>
-                  <Text style={styles.scorerFlag}>{gTeam?.flag ?? ""}</Text>
-                  <Text style={styles.scorerName} numberOfLines={1}>{s.playerName}</Text>
-                  {s.count > 1 && (
-                    <View style={styles.scorerCountBadge}>
-                      <Text style={styles.scorerCountText}>&times;{s.count}</Text>
-                    </View>
-                  )}
-                </View>
-              );
-            })}
-          </View>
-        </View>
-      )}
 
       <View style={styles.footer}>
         <View style={styles.footerRow}>
@@ -316,45 +331,48 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 1,
   },
-  scorersSection: {
-    marginTop: 10,
+  sideColumn: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: 4,
   },
-  scorersDivider: {
-    height: 1,
-    backgroundColor: Colors.border,
-    marginBottom: 8,
-  },
-  scorersWrap: {
-    gap: 6,
-  },
-  scorerRow: {
+  teamRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
-  scorerFlag: {
-    fontSize: 18,
+  teamRowRight: {
+    justifyContent: "flex-end",
+    alignSelf: "flex-end",
   },
-  scorerName: {
+  scorersInline: {
+    marginTop: 2,
+    gap: 3,
+  },
+  scorersInlineRight: {
+    alignItems: "flex-end",
+  },
+  scorerInlineRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  scorerInlineRowRight: {
+    justifyContent: "flex-end",
+  },
+  scorerInlineName: {
     color: Colors.text,
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: "700",
     flexShrink: 1,
   },
-  scorerCountBadge: {
-    backgroundColor: Colors.goldDim,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginLeft: "auto" as const,
-  },
-  scorerCountText: {
-    color: Colors.gold,
-    fontSize: 11,
-    fontWeight: "800",
+  scorerMinute: {
+    color: Colors.textDim,
+    fontSize: 10,
+    fontWeight: "600",
   },
   footer: {
-    marginTop: 14,
+    marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: Colors.border,

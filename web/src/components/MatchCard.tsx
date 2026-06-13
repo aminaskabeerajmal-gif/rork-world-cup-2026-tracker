@@ -1,19 +1,23 @@
 import { memo } from "react";
 import { MapPin } from "lucide-react";
-import { type Match, getTeam, formatKickoff } from "@/data/tournament";
+import { type Match, type GoalEvent, getTeam, formatKickoff } from "@/data/tournament";
 import { cn } from "@/lib/utils";
 
-type ScorerRow = { name: string; flag: string; count: number };
+type ScorerRow = { name: string; count: number; minutes: number[] };
 
-function buildScorers(match: Match): ScorerRow[] {
+function groupBySide(goals: GoalEvent[], side: "home" | "away"): ScorerRow[] {
   const map = new Map<string, ScorerRow>();
-  for (const g of match.goals) {
-    const team = getTeam(g.teamId);
-    const key = `${g.teamId}::${g.playerName}`;
-    const existing = map.get(key);
-    if (existing) existing.count += 1;
-    else map.set(key, { name: g.playerName, flag: team?.flag ?? "", count: 1 });
-  }
+  goals
+    .filter((g) => g.side === side)
+    .forEach((g) => {
+      const existing = map.get(g.playerName);
+      if (existing) {
+        existing.count += 1;
+        existing.minutes.push(g.minute);
+      } else {
+        map.set(g.playerName, { name: g.playerName, count: 1, minutes: [g.minute] });
+      }
+    });
   return Array.from(map.values()).sort((a, b) => b.count - a.count);
 }
 
@@ -25,7 +29,9 @@ const MatchCard = memo(({ match }: { match: Match }) => {
   const { et, ist } = formatKickoff(match.kickoff);
   const isFinished = match.status === "finished";
   const isLive = match.status === "live";
-  const scorers = isFinished ? buildScorers(match) : [];
+
+  const homeScorers = isFinished ? groupBySide(match.goals, "home") : [];
+  const awayScorers = isFinished ? groupBySide(match.goals, "away") : [];
 
   return (
     <article className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition-shadow hover:shadow-md">
@@ -53,9 +59,14 @@ const MatchCard = memo(({ match }: { match: Match }) => {
         )}
       </div>
 
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-4">
-        <TeamSide name={home.name} flag={home.flag} align="start" />
-        <div className="flex min-w-[68px] flex-col items-center">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 px-4 py-4">
+        <TeamSideWithScorers
+          name={home.name}
+          flag={home.flag}
+          align="start"
+          scorers={homeScorers}
+        />
+        <div className="flex min-w-[68px] flex-col items-center pt-1">
           {isFinished || isLive ? (
             <div className="flex items-center gap-1.5 text-2xl font-extrabold tabular-nums text-foreground">
               <span>{match.homeScore ?? 0}</span>
@@ -68,24 +79,13 @@ const MatchCard = memo(({ match }: { match: Match }) => {
             </span>
           )}
         </div>
-        <TeamSide name={away.name} flag={away.flag} align="end" />
+        <TeamSideWithScorers
+          name={away.name}
+          flag={away.flag}
+          align="end"
+          scorers={awayScorers}
+        />
       </div>
-
-      {scorers.length > 0 && (
-        <div className="space-y-1 border-t border-border/60 bg-accent/30 px-4 py-3">
-          {scorers.map((s) => (
-            <div key={s.name} className="flex items-center gap-2 text-sm">
-              <span className="text-base leading-none">{s.flag}</span>
-              <span className="font-medium text-foreground">{s.name}</span>
-              {s.count > 1 && (
-                <span className="rounded-full bg-gold/15 px-1.5 py-0.5 text-[11px] font-bold text-gold">
-                  ×{s.count}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
 
       <div className="space-y-0.5 border-t border-border/60 px-4 py-3">
         <p className="text-sm font-semibold text-foreground">{et}</p>
@@ -108,16 +108,56 @@ const MatchCard = memo(({ match }: { match: Match }) => {
 
 MatchCard.displayName = "MatchCard";
 
-function TeamSide({ name, flag, align }: { name: string; flag: string; align: "start" | "end" }) {
+function TeamSideWithScorers({
+  name,
+  flag,
+  align,
+  scorers,
+}: {
+  name: string;
+  flag: string;
+  align: "start" | "end";
+  scorers: ScorerRow[];
+}) {
   return (
     <div
       className={cn(
-        "flex items-center gap-2.5",
-        align === "end" ? "flex-row-reverse text-right" : "text-left"
+        "flex flex-col gap-1.5",
+        align === "end" ? "items-end" : "items-start"
       )}
     >
-      <span className="text-3xl leading-none">{flag}</span>
-      <span className="text-sm font-bold leading-tight text-foreground">{name}</span>
+      <div
+        className={cn(
+          "flex items-center gap-2.5",
+          align === "end" ? "flex-row-reverse text-right" : "text-left"
+        )}
+      >
+        <span className="text-3xl leading-none">{flag}</span>
+        <span className="text-sm font-bold leading-tight text-foreground">{name}</span>
+      </div>
+      {scorers.length > 0 && (
+        <div className={cn("flex flex-col gap-0.5", align === "end" ? "items-end" : "items-start")}>
+          {scorers.map((s) => (
+            <div
+              key={s.name}
+              className={cn(
+                "flex items-center gap-1.5 text-[11px] leading-tight",
+                align === "end" ? "flex-row-reverse" : ""
+              )}
+            >
+              <span className="font-medium text-foreground">{s.name}</span>
+              <span className="text-muted-foreground/70">
+                {s.minutes.sort((a, b) => a - b).join("', ")}'
+              </span>
+              {s.count > 1 && (
+                <span className="rounded-full bg-gold/15 px-1 py-0 text-[10px] font-bold text-gold">
+                  ×{s.count}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
