@@ -170,6 +170,11 @@ export const [LiveMatchProvider, useLiveMatch] = createContextHook(() => {
     [overrides],
   );
 
+  const resetAll = useCallback(async () => {
+    setOverrides({});
+    await saveOverrides({});
+  }, []);
+
   return useMemo(
     () => ({
       matches: mergedMatches,
@@ -180,7 +185,8 @@ export const [LiveMatchProvider, useLiveMatch] = createContextHook(() => {
       updateScore,
       addGoal,
       removeGoal,
+      resetAll,
     }),
-    [mergedMatches, getMatch, setLive, endLive, updateMinute, updateScore, addGoal, removeGoal],
+    [mergedMatches, getMatch, setLive, endLive, updateMinute, updateScore, addGoal, removeGoal, resetAll],
   );
 });

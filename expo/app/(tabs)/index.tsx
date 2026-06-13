@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { RefreshCw } from "lucide-react-native";
 
 import Colors from "@/constants/colors";
 import { Match, MatchStatus } from "@/constants/tournament";
@@ -25,7 +26,7 @@ const FILTERS: { key: Filter; label: string }[] = [
 
 export default function MatchesScreen() {
   const [filter, setFilter] = useState<Filter>("all");
-  const { matches: allMatches } = useLiveMatch();
+  const { matches: allMatches, resetAll } = useLiveMatch();
 
   const liveCount = useMemo(
     () => allMatches.filter((m) => m.status === "live").length,
@@ -54,12 +55,21 @@ export default function MatchesScreen() {
             </View>
           </View>
         </View>
-        {liveCount > 0 && (
-          <View style={styles.liveCounter}>
-            <LivePulse />
-            <Text style={styles.liveCounterText}>{liveCount} LIVE</Text>
-          </View>
-        )}
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => resetAll()}
+            style={styles.refreshBtn}
+          >
+            <RefreshCw size={18} color={Colors.textMuted} strokeWidth={2.5} />
+          </TouchableOpacity>
+          {liveCount > 0 && (
+            <View style={styles.liveCounter}>
+              <LivePulse />
+              <Text style={styles.liveCounterText}>{liveCount} LIVE</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       <View style={styles.chipsWrap}>
@@ -147,6 +157,22 @@ const styles = StyleSheet.create({
   hostText: {
     fontSize: 14,
   },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 8,
+  },
+  refreshBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   liveCounter: {
     flexDirection: "row",
     alignItems: "center",
@@ -155,7 +181,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    marginTop: 8,
   },
   liveCounterText: {
     color: Colors.live,

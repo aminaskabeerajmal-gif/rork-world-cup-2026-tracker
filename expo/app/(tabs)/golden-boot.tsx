@@ -3,16 +3,18 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { RefreshCw } from "lucide-react-native";
 
 import Colors from "@/constants/colors";
 import { computeGoldenBoot, getTeam } from "@/constants/tournament";
 import { useLiveMatch } from "@/providers/liveMatch";
 
 export default function GoldenBootScreen() {
-  const { matches } = useLiveMatch();
+  const { matches, resetAll } = useLiveMatch();
 
   const standings = useMemo(() => computeGoldenBoot(matches), [matches]);
 
@@ -27,8 +29,19 @@ export default function GoldenBootScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
-        <Text style={styles.kicker}>GOLDEN BOOT RACE</Text>
-        <Text style={styles.title}>Top Scorers</Text>
+        <View style={styles.headerTop}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.kicker}>GOLDEN BOOT RACE</Text>
+            <Text style={styles.title}>Top Scorers</Text>
+          </View>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => resetAll()}
+            style={styles.refreshBtn}
+          >
+            <RefreshCw size={18} color={Colors.textMuted} strokeWidth={2.5} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.leaderCard}>
@@ -154,6 +167,22 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: -1,
     marginTop: 2,
+  },
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  },
+  refreshBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 4,
   },
   leaderCard: {
     marginHorizontal: 20,

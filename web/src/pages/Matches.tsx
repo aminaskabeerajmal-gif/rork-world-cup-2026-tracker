@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { MATCHES, GROUPS, type Match } from "@/data/tournament";
 import MatchCard from "@/components/MatchCard";
 import { cn } from "@/lib/utils";
+import { RefreshCw } from "lucide-react";
 
 type Filter = "all" | "finished" | "upcoming";
 
@@ -27,11 +28,22 @@ const Matches = () => {
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">June 11 – July 19, 2026</p>
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Match Centre</h1>
-        <p className="text-sm text-muted-foreground">
-          Every group-stage fixture, with kickoff times in Eastern and Indian time.
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">June 11 – July 19, 2026</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Match Centre</h1>
+            <p className="text-sm text-muted-foreground">
+              Every group-stage fixture, with kickoff times in Eastern and Indian time.
+            </p>
+          </div>
+          <button
+            onClick={() => { setFilter("all"); setGroup("all"); }}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:text-foreground hover:border-foreground/20"
+            title="Reset filters"
+          >
+            <RefreshCw className="h-4 w-4" strokeWidth={2.5} />
+          </button>
+        </div>
       </header>
 
       <div className="space-y-3">
