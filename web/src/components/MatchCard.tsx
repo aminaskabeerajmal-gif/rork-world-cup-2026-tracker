@@ -94,16 +94,13 @@ const MatchCard = memo(({ match }: { match: Match }) => {
           <MapPin className="h-3 w-3" />
           {match.venue} · {match.city}
         </p>
-        <div className="flex flex-wrap items-center gap-2 pt-1">
-          <p className="text-xs font-bold tracking-wide text-primary">
-            📺 {match.broadcastChannel}
-          </p>
-          {(isLive || isFinished) && (
+        {(isLive || isFinished) && (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             <span className="rounded bg-[#D00] px-1.5 py-0.5 text-[10px] font-extrabold text-white">
               ESPN
             </span>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </article>
   );

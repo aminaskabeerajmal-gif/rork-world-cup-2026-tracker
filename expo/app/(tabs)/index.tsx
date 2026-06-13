@@ -72,12 +72,6 @@ export default function MatchesScreen() {
         </View>
       </View>
 
-      <View style={styles.broadcastBanner}>
-        <Text style={styles.broadcastBannerText}>
-          Watch live on <Text style={styles.broadcastBold}>Unite8 Sports</Text> - India's home of the World Cup
-        </Text>
-      </View>
-
       <View style={styles.chipsWrap}>
         <ScrollView
           horizontal
@@ -193,27 +187,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "900",
     letterSpacing: 0.5,
-  },
-  broadcastBanner: {
-    marginHorizontal: 20,
-    marginTop: 12,
-    backgroundColor: Colors.greenDim,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: Colors.green + "20",
-  },
-  broadcastBannerText: {
-    color: Colors.textMuted,
-    fontSize: 11,
-    fontWeight: "600",
-    textAlign: "center" as const,
-    letterSpacing: 0.2,
-  },
-  broadcastBold: {
-    color: Colors.green,
-    fontWeight: "900",
   },
   chipsWrap: {
     paddingTop: 14,

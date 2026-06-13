@@ -67,11 +67,6 @@ const Matches = () => {
             </button>
           </div>
         </div>
-        <div className="mt-3 rounded-xl border border-primary/15 bg-primary/5 px-4 py-2.5 text-center">
-          <p className="text-xs font-semibold text-muted-foreground">
-            Watch live on <span className="font-extrabold text-primary">Unite8 Sports</span> &mdash; India&apos;s home of the World Cup
-          </p>
-        </div>
       </header>
 
       <div className="space-y-3">

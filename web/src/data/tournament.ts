@@ -33,7 +33,6 @@ export type Match = {
   city: string;
   kickoff: string;
   goals: GoalEvent[];
-  broadcastChannel: string;
 };
 
 /** FIFA World Cup 2026 — 48 teams across 12 groups (A–L). */
@@ -185,9 +184,6 @@ function v(idx: number): Venue {
 function buildMatches(): Match[] {
   const out: Match[] = [];
 
-  /** Top teams + hosts get Unite8 Sports 1 / 1 HD; others get Unite8 Sports 2 / 2 HD. */
-  const MARQUEE = new Set(["mex", "usa", "can", "arg", "fra", "bra", "eng", "esp", "por", "ger", "ned"]);
-
   function add(
     id: string, group: string, homeId: string, awayId: string,
     dateStr: string, timeET: string, vidx: number,
@@ -204,7 +200,6 @@ function buildMatches(): Match[] {
     const [h, m] = timeET.split(":").map(Number);
     const kickoff = new Date(Date.UTC(2026, monthMap[month], Number(day), h + 4, m, 0)).toISOString();
 
-    const isMarquee = MARQUEE.has(homeId) || MARQUEE.has(awayId);
     out.push({
       id, group, homeId, awayId, homeScore, awayScore, status, minute,
       stage: "Group Stage",
@@ -212,7 +207,6 @@ function buildMatches(): Match[] {
       city: v(vidx).city,
       kickoff,
       goals: goalsData.map((g, i) => ({ ...g, id: `${id}_g${i}`, matchId: id })),
-      broadcastChannel: isMarquee ? "Unite8 Sports 1 / 1 HD" : "Unite8 Sports 2 / 2 HD",
     });
   }
 
