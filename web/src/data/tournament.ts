@@ -220,8 +220,18 @@ function buildMatches(): Match[] {
     { teamId: "cze", playerName: "Patrik Schick", minute: 72, side: "away" },
   ]);
 
-  add("m3",  "B", "can", "bih", "Jun 12", "15:00", 3);
-  add("m4",  "D", "usa", "par", "Jun 12", "21:00", 5);
+  add("m3",  "B", "can", "bih", "Jun 12", "15:00", 3, "finished", 2, 2, null, [
+    { teamId: "bih", playerName: "Edin Dzeko", minute: 14, side: "away" },
+    { teamId: "can", playerName: "Jonathan David", minute: 31, side: "home" },
+    { teamId: "bih", playerName: "Ermedin Demirovic", minute: 52, side: "away" },
+    { teamId: "can", playerName: "Cyle Larin", minute: 78, side: "home" },
+  ]);
+  add("m4",  "D", "usa", "par", "Jun 12", "21:00", 5, "finished", 3, 1, null, [
+    { teamId: "usa", playerName: "Christian Pulisic", minute: 23, side: "home" },
+    { teamId: "usa", playerName: "Timothy Weah", minute: 41, side: "home" },
+    { teamId: "par", playerName: "Julio Enciso", minute: 57, side: "away" },
+    { teamId: "usa", playerName: "Folarin Balogun", minute: 78, side: "home" },
+  ]);
   add("m5",  "B", "qat", "sui", "Jun 12", "15:00", 6);
 
   add("m6",  "C", "bra", "mar", "Jun 13", "18:00", 15);
