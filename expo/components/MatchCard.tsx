@@ -192,8 +192,15 @@ function MatchCardBase({ match }: { match: Match }) {
         <Text style={styles.venue} numberOfLines={1}>
           {match.venue} · {match.city}
         </Text>
-        <View style={styles.channelRow}>
-          <Text style={styles.channelText}>📺 {match.broadcastChannel}</Text>
+        <View style={styles.sourceRow}>
+          <View style={styles.channelChip}>
+            <Text style={styles.channelText}>📺 {match.broadcastChannel}</Text>
+          </View>
+          {(!isUpcoming || hasScore) && (
+            <View style={styles.espnChip}>
+              <Text style={styles.espnText}>ESPN</Text>
+            </View>
+          )}
         </View>
       </View>
     </Pressable>
@@ -373,8 +380,14 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "600",
   },
-  channelRow: {
-    marginTop: 6,
+  sourceRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  channelChip: {
     flexDirection: "row",
     alignItems: "center",
   },
@@ -383,6 +396,18 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "800",
     letterSpacing: 0.2,
+  },
+  espnChip: {
+    backgroundColor: "#D00",
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 5,
+  },
+  espnText: {
+    color: "#FFF",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 0.5,
   },
 });
 

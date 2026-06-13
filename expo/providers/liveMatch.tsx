@@ -1,9 +1,10 @@
 import createContextHook from "@nkzw/create-context-hook";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { GoalEvent, MATCHES, Match, MatchStatus } from "@/constants/tournament";
+import { applyEspnData, fetchRecentEspnScoreboards, type EspnMatchData } from "@/services/espn";
 
 const STORAGE_KEY = "wc26.liveMatches";
 
@@ -34,8 +35,13 @@ async function saveOverrides(map: OverridesMap): Promise<void> {
 
 let nextGoalId = 1;
 
+const ESPN_POLL_INTERVAL = 60_000; // 60 seconds
+
 export const [LiveMatchProvider, useLiveMatch] = createContextHook(() => {
   const [overrides, setOverrides] = useState<OverridesMap>({});
+  const [espnData, setEspnData] = useState<EspnMatchData[]>([]);
+  const [espnLive, setEspnLive] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useQuery({
     queryKey: ["liveMatches"],
@@ -46,21 +52,69 @@ export const [LiveMatchProvider, useLiveMatch] = createContextHook(() => {
     },
   });
 
-  /** Merge base MATCHES with persisted overrides. */
+  // Poll ESPN for live scores
+  useEffect(() => {
+    const poll = async () => {
+      try {
+        const data = await fetchRecentEspnScoreboards();
+        if (data.length > 0) {
+          setEspnLive(true);
+        }
+        setEspnData(data);
+      } catch {
+        // ESPN fetch failed silently — keep existing data
+      }
+    };
+
+    poll(); // initial fetch
+    pollRef.current = setInterval(poll, ESPN_POLL_INTERVAL);
+
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, []);
+
+  /** Build ESPN lookup by team pair. */
+  const espnLookup = useMemo(() => {
+    const map = new Map<string, EspnMatchData>();
+    for (const e of espnData) {
+      const key = `${e.homeId}::${e.awayId}`;
+      map.set(key, e);
+    }
+    return map;
+  }, [espnData]);
+
+  /** Merge base MATCHES with persisted overrides AND ESPN live data. */
   const mergedMatches = useMemo<Match[]>(() => {
     return MATCHES.map((m) => {
       const ov = overrides[m.id];
-      if (!ov) return { ...m, goals: m.goals ?? [] };
-      return {
-        ...m,
-        goals: ov.goals ?? m.goals ?? [],
-        status: ov.status ?? m.status,
-        homeScore: ov.homeScore !== undefined ? ov.homeScore : m.homeScore,
-        awayScore: ov.awayScore !== undefined ? ov.awayScore : m.awayScore,
-        minute: ov.minute !== undefined ? ov.minute : m.minute,
-      };
+      const hasManual = ov && (
+        ov.status !== undefined ||
+        ov.homeScore !== undefined ||
+        ov.awayScore !== undefined
+      );
+
+      // Apply manual overrides first
+      const withManual: Match = ov
+        ? {
+            ...m,
+            goals: ov.goals ?? m.goals ?? [],
+            status: ov.status ?? m.status,
+            homeScore: ov.homeScore !== undefined ? ov.homeScore : m.homeScore,
+            awayScore: ov.awayScore !== undefined ? ov.awayScore : m.awayScore,
+            minute: ov.minute !== undefined ? ov.minute : m.minute,
+          }
+        : { ...m, goals: m.goals ?? [] };
+
+      // If user manually touched this match, don't override with ESPN
+      if (hasManual) return withManual;
+
+      // Otherwise, apply ESPN live data
+      const espnKey = `${m.homeId}::${m.awayId}`;
+      const espnMatch = espnLookup.get(espnKey);
+      return applyEspnData(withManual, espnMatch);
     });
-  }, [overrides]);
+  }, [overrides, espnLookup]);
 
   const getMatch = useCallback(
     (id: string): Match | undefined => mergedMatches.find((m) => m.id === id),
@@ -178,6 +232,7 @@ export const [LiveMatchProvider, useLiveMatch] = createContextHook(() => {
   return useMemo(
     () => ({
       matches: mergedMatches,
+      espnLive,
       getMatch,
       setLive,
       endLive,
@@ -187,6 +242,6 @@ export const [LiveMatchProvider, useLiveMatch] = createContextHook(() => {
       removeGoal,
       resetAll,
     }),
-    [mergedMatches, getMatch, setLive, endLive, updateMinute, updateScore, addGoal, removeGoal, resetAll],
+    [mergedMatches, espnLive, getMatch, setLive, endLive, updateMinute, updateScore, addGoal, removeGoal, resetAll],
   );
 });
