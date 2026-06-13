@@ -94,6 +94,9 @@ const MatchCard = memo(({ match }: { match: Match }) => {
           <MapPin className="h-3 w-3" />
           {match.venue} · {match.city}
         </p>
+        <p className="pt-1 text-xs font-bold tracking-wide text-primary">
+          📺 {match.broadcastChannel}
+        </p>
       </div>
     </article>
   );

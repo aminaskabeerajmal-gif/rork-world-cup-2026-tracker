@@ -173,6 +173,9 @@ function MatchCardBase({ match }: { match: Match }) {
         <Text style={styles.venue} numberOfLines={1}>
           {match.venue} · {match.city}
         </Text>
+        <View style={styles.channelRow}>
+          <Text style={styles.channelText}>📺 {match.broadcastChannel}</Text>
+        </View>
       </View>
     </Pressable>
   );
@@ -350,6 +353,17 @@ const styles = StyleSheet.create({
     color: Colors.textDim,
     fontSize: 11,
     fontWeight: "600",
+  },
+  channelRow: {
+    marginTop: 6,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  channelText: {
+    color: Colors.green,
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.2,
   },
 });
 

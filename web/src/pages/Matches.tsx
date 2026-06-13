@@ -30,7 +30,7 @@ const Matches = () => {
       <header className="space-y-1">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">June 11 – July 19, 2026</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">June 11 - July 19, 2026</p>
             <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Match Centre</h1>
             <p className="text-sm text-muted-foreground">
               Every group-stage fixture, with kickoff times in Eastern and Indian time.
@@ -43,6 +43,11 @@ const Matches = () => {
           >
             <RefreshCw className="h-4 w-4" strokeWidth={2.5} />
           </button>
+        </div>
+        <div className="mt-3 rounded-xl border border-primary/15 bg-primary/5 px-4 py-2.5 text-center">
+          <p className="text-xs font-semibold text-muted-foreground">
+            Watch live on <span className="font-extrabold text-primary">Unite8 Sports</span> &mdash; India&apos;s home of the World Cup
+          </p>
         </div>
       </header>
 
