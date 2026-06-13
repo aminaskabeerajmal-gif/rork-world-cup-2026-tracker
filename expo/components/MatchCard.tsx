@@ -64,6 +64,23 @@ function groupGoals(goals: GoalEvent[]): ScorerSummary[] {
   return Array.from(map.values()).sort((a, b) => b.count - a.count || a.playerName.localeCompare(b.playerName));
 }
 
+function useLiveMinute(kickoffISO: string, isLive: boolean): number | null {
+  const [elapsed, setElapsed] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isLive) return;
+    const start = new Date(kickoffISO).getTime();
+    const tick = () => {
+      setElapsed(Math.max(0, Math.floor((Date.now() - start) / 1000)));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [kickoffISO, isLive]);
+
+  return isLive ? Math.floor(elapsed / 60) : null;
+}
+
 function MatchCardBase({ match }: { match: Match }) {
   const home = getTeam(match.homeId);
   const away = getTeam(match.awayId);
@@ -79,6 +96,8 @@ function MatchCardBase({ match }: { match: Match }) {
   const awayWin = hasScore && (match.awayScore ?? 0) > (match.homeScore ?? 0);
 
   const countdown = useCountdown(isUpcoming ? match.kickoff : new Date().toISOString());
+
+  const liveMinute = useLiveMinute(match.kickoff, isLive);
 
   const scorers = useMemo(() => (hasGoals ? groupGoals(match.goals) : []), [match.goals, hasGoals]);
 
@@ -98,7 +117,7 @@ function MatchCardBase({ match }: { match: Match }) {
         {isLive ? (
           <View style={styles.liveBadge}>
             <LivePulse />
-            <Text style={styles.liveText}>{match.minute}'</Text>
+            <Text style={styles.liveText}>{liveMinute ?? match.minute ?? 0}'</Text>
           </View>
         ) : isFinished ? (
           <Text style={styles.statusText}>FULL TIME</Text>

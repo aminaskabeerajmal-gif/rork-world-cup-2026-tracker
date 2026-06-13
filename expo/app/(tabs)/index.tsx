@@ -41,7 +41,7 @@ export default function MatchesScreen() {
     });
     if (filter === "all") return sorted;
     return sorted.filter((m) => m.status === filter);
-  }, [filter]);
+  }, [filter, allMatches]);
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
