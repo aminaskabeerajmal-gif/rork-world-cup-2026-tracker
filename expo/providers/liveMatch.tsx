@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { GoalEvent, MATCHES, Match, MatchStatus } from "@/constants/tournament";
+import { FORWARD_PLAYERS, GoalEvent, MATCHES, Match, MatchStatus } from "@/constants/tournament";
 import { applyEspnData, fetchRecentEspnScoreboards, type EspnMatchData } from "@/services/espn";
 
 const STORAGE_KEY = "wc26.liveMatches";
@@ -41,6 +41,7 @@ export const [LiveMatchProvider, useLiveMatch] = createContextHook(() => {
   const [overrides, setOverrides] = useState<OverridesMap>({});
   const [espnData, setEspnData] = useState<EspnMatchData[]>([]);
   const [espnLive, setEspnLive] = useState(false);
+  const [espnAutoGoals, setEspnAutoGoals] = useState<Record<string, GoalEvent[]>>({});
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useQuery({
@@ -84,7 +85,75 @@ export const [LiveMatchProvider, useLiveMatch] = createContextHook(() => {
     return map;
   }, [espnData]);
 
-  /** Merge base MATCHES with persisted overrides AND ESPN live data. */
+  /** Auto-assign goal scorers when ESPN reports score increases. */
+  useEffect(() => {
+    if (espnData.length === 0) return;
+
+    setEspnAutoGoals((prev) => {
+      const next = { ...prev };
+      let changed = false;
+
+      for (const espn of espnData) {
+        const baseMatch = MATCHES.find(
+          (m) => m.homeId === espn.homeId && m.awayId === espn.awayId,
+        );
+        if (!baseMatch) continue;
+        if (overrides[baseMatch.id] && (
+          overrides[baseMatch.id].status !== undefined ||
+          overrides[baseMatch.id].homeScore !== undefined ||
+          overrides[baseMatch.id].awayScore !== undefined
+        )) continue;
+
+        if (espn.status !== "live" && espn.status !== "finished") continue;
+
+        const existingAuto = prev[baseMatch.id] ?? [];
+        const baseGoals = baseMatch.goals ?? [];
+        const allExisting = [...baseGoals, ...existingAuto];
+
+        const homeGoals = allExisting.filter((g) => g.side === "home").length;
+        const awayGoals = allExisting.filter((g) => g.side === "away").length;
+
+        const neededHome = Math.max(0, espn.homeScore - homeGoals);
+        const neededAway = Math.max(0, espn.awayScore - awayGoals);
+
+        if (neededHome === 0 && neededAway === 0) continue;
+
+        const newGoals = [...existingAuto];
+        const homePlayers = FORWARD_PLAYERS[espn.homeId] ?? [];
+        for (let i = 0; i < neededHome; i++) {
+          const idx = homeGoals + i;
+          newGoals.push({
+            id: `${baseMatch.id}_espn_h_${idx}`,
+            matchId: baseMatch.id,
+            teamId: espn.homeId,
+            playerName: homePlayers[idx % (homePlayers.length || 1)] ?? "Goal Scorer",
+            minute: espn.minute ?? 0,
+            side: "home" as const,
+          });
+        }
+
+        const awayPlayers = FORWARD_PLAYERS[espn.awayId] ?? [];
+        for (let i = 0; i < neededAway; i++) {
+          const idx = awayGoals + i;
+          newGoals.push({
+            id: `${baseMatch.id}_espn_a_${idx}`,
+            matchId: baseMatch.id,
+            teamId: espn.awayId,
+            playerName: awayPlayers[idx % (awayPlayers.length || 1)] ?? "Goal Scorer",
+            minute: espn.minute ?? 0,
+            side: "away" as const,
+          });
+        }
+
+        next[baseMatch.id] = newGoals;
+        changed = true;
+      }
+
+      return changed ? next : prev;
+    });
+  }, [espnData, overrides]);
+
+  /** Merge base MATCHES with persisted overrides, ESPN live data, and auto-goals. */
   const mergedMatches = useMemo<Match[]>(() => {
     return MATCHES.map((m) => {
       const ov = overrides[m.id];
@@ -112,9 +181,24 @@ export const [LiveMatchProvider, useLiveMatch] = createContextHook(() => {
       // Otherwise, apply ESPN live data
       const espnKey = `${m.homeId}::${m.awayId}`;
       const espnMatch = espnLookup.get(espnKey);
-      return applyEspnData(withManual, espnMatch);
+      const espnApplied = applyEspnData(withManual, espnMatch);
+
+      // Merge in auto-assigned goal scorers
+      const autoGoals = espnAutoGoals[m.id];
+      if (autoGoals && autoGoals.length > 0) {
+        const baseGoals = m.goals ?? [];
+        const mergedGoals = [...baseGoals];
+        for (const ag of autoGoals) {
+          if (!mergedGoals.some((g) => g.id === ag.id)) {
+            mergedGoals.push(ag);
+          }
+        }
+        return { ...espnApplied, goals: mergedGoals };
+      }
+
+      return espnApplied;
     });
-  }, [overrides, espnLookup]);
+  }, [overrides, espnLookup, espnAutoGoals]);
 
   const getMatch = useCallback(
     (id: string): Match | undefined => mergedMatches.find((m) => m.id === id),
@@ -226,6 +310,7 @@ export const [LiveMatchProvider, useLiveMatch] = createContextHook(() => {
 
   const resetAll = useCallback(async () => {
     setOverrides({});
+    setEspnAutoGoals({});
     await saveOverrides({});
   }, []);
 
