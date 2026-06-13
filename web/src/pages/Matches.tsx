@@ -53,15 +53,10 @@ const Matches = () => {
                 {liveCount} LIVE
               </span>
             )}
-            {espnLive && (
-              <span className="rounded-full bg-[#D00] px-2.5 py-1 text-[11px] font-extrabold text-white">
-                ESPN
-              </span>
-            )}
             <button
               onClick={() => { setFilter("all"); setGroup("all"); refresh(); }}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:text-foreground hover:border-foreground/20"
-              title="Refresh from ESPN"
+              title="Refresh live scores"
             >
               <RefreshCw className="h-4 w-4" strokeWidth={2.5} />
             </button>

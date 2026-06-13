@@ -207,13 +207,7 @@ function MatchCardBase({ match }: { match: Match }) {
         <Text style={styles.venue} numberOfLines={1}>
           {match.venue} · {match.city}
         </Text>
-        {(!isUpcoming || hasScore) && (
-          <View style={styles.espnRow}>
-            <View style={styles.espnChip}>
-              <Text style={styles.espnText}>ESPN</Text>
-            </View>
-          </View>
-        )}
+
       </View>
     </Pressable>
   );
@@ -395,23 +389,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "600",
   },
-  espnRow: {
-    marginTop: 8,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  espnChip: {
-    backgroundColor: "#D00",
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 5,
-  },
-  espnText: {
-    color: "#FFF",
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 0.5,
-  },
+
 });
 
 export default memo(MatchCardBase);
