@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { RefreshCw } from "lucide-react-native";
 
 import Colors from "@/constants/colors";
-import { computeGoldenBoot, getTeam } from "@/constants/tournament";
+import { computeGoldenBoot, getTeam, PAST_GOLDEN_BOOT_WINNERS } from "@/constants/tournament";
 import { useLiveMatch } from "@/providers/liveMatch";
 
 export default function GoldenBootScreen() {
@@ -86,6 +86,36 @@ export default function GoldenBootScreen() {
           </>
         )}
       </View>
+
+      {/* ── Past Winners ── */}
+      <Text style={styles.sectionTitle}>PAST WINNERS</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.pastWinnersList}
+      >
+        {PAST_GOLDEN_BOOT_WINNERS.map((w) => {
+          const team = getTeam(w.teamId);
+          return (
+            <View key={`${w.year}-${w.playerName}`} style={styles.pastCard}>
+              <View style={styles.pastCardTop}>
+                <Text style={styles.pastYear}>{w.year}</Text>
+                <Text style={styles.pastHost}>{w.host}</Text>
+              </View>
+              <Text style={styles.pastPlayer} numberOfLines={1}>
+                {w.playerName}
+              </Text>
+              <View style={styles.pastCardBottom}>
+                <Text style={styles.pastFlag}>{team?.flag ?? "⚽"}</Text>
+                <View style={styles.pastGoalPill}>
+                  <Text style={styles.pastGoalCount}>{w.goals}</Text>
+                  <Text style={styles.pastGoalLabel}>goals</Text>
+                </View>
+              </View>
+            </View>
+          );
+        })}
+      </ScrollView>
 
       <Text style={styles.sectionTitle}>FULL RANKINGS</Text>
 
@@ -360,5 +390,64 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontSize: 15,
     fontWeight: "600",
+  },
+  // ── Past Winners ──
+  pastWinnersList: {
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  pastCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    width: 150,
+    justifyContent: "space-between",
+  },
+  pastCardTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  pastYear: {
+    color: Colors.gold,
+    fontSize: 20,
+    fontWeight: "900",
+  },
+  pastHost: {
+    color: Colors.textDim,
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  pastPlayer: {
+    color: Colors.text,
+    fontSize: 13,
+    fontWeight: "800",
+    marginBottom: 8,
+  },
+  pastCardBottom: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  pastFlag: {
+    fontSize: 22,
+  },
+  pastGoalPill: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 3,
+  },
+  pastGoalCount: {
+    color: Colors.text,
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  pastGoalLabel: {
+    color: Colors.textDim,
+    fontSize: 11,
+    fontWeight: "700",
   },
 });

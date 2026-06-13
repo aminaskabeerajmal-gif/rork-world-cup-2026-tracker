@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Trophy } from "lucide-react";
-import { MATCHES, computeGoldenBoot, getTeam } from "@/data/tournament";
+import { MATCHES, computeGoldenBoot, getTeam, PAST_GOLDEN_BOOT_WINNERS } from "@/data/tournament";
 import { cn } from "@/lib/utils";
 
 const GoldenBoot = () => {
@@ -43,6 +43,36 @@ const GoldenBoot = () => {
         </div>
       </div>
 
+      {/* ── Past Winners ── */}
+      <section>
+        <h2 className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Past Winners</h2>
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+          {PAST_GOLDEN_BOOT_WINNERS.map((w) => {
+            const team = getTeam(w.teamId);
+            return (
+              <div
+                key={`${w.year}-${w.playerName}`}
+                className="flex shrink-0 w-40 flex-col justify-between rounded-xl border border-border/70 bg-card p-4"
+              >
+                <div className="flex items-start justify-between">
+                  <span className="text-xl font-black text-gold">{w.year}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/60">{w.host}</span>
+                </div>
+                <p className="mt-1.5 truncate text-sm font-extrabold text-foreground">{w.playerName}</p>
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="text-xl leading-none">{team?.flag ?? "⚽"}</span>
+                  <span className="flex items-baseline gap-1">
+                    <span className="text-lg font-black text-foreground">{w.goals}</span>
+                    <span className="text-[11px] font-bold text-muted-foreground">goals</span>
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── Full Rankings ── */}
       <section className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
         {ranking.slice(0, 60).map((entry, i) => {
           const team = getTeam(entry.teamId);

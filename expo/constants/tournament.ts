@@ -460,6 +460,34 @@ export function computeStandings(group: string): Standing[] {
   return list;
 }
 
+/** Historical Golden Boot winners — every tournament since 1982. */
+export type PastGoldenBootWinner = {
+  playerName: string;
+  teamId: string;
+  goals: number;
+  year: number;
+  host: string;
+};
+
+export const PAST_GOLDEN_BOOT_WINNERS: PastGoldenBootWinner[] = [
+  { year: 2022, host: "Qatar",     playerName: "Kylian Mbappe",    teamId: "fra", goals: 8  },
+  { year: 2018, host: "Russia",    playerName: "Harry Kane",        teamId: "eng", goals: 6  },
+  { year: 2014, host: "Brazil",    playerName: "James Rodriguez",   teamId: "col", goals: 6  },
+  { year: 2010, host: "S. Africa", playerName: "Thomas Muller",     teamId: "ger", goals: 5  },
+  { year: 2006, host: "Germany",   playerName: "Miroslav Klose",    teamId: "ger", goals: 5  },
+  { year: 2002, host: "Korea/Japan", playerName: "Ronaldo",         teamId: "bra", goals: 8  },
+  { year: 1998, host: "France",    playerName: "Davor Suker",       teamId: "cro", goals: 6  },
+  { year: 1994, host: "USA",       playerName: "Hristo Stoichkov",  teamId: "bul", goals: 6  },
+  { year: 1990, host: "Italy",     playerName: "Salvatore Schillaci", teamId: "ita", goals: 6 },
+  { year: 1986, host: "Mexico",    playerName: "Gary Lineker",      teamId: "eng", goals: 6  },
+  { year: 1982, host: "Spain",     playerName: "Paolo Rossi",       teamId: "ita", goals: 6  },
+  { year: 1978, host: "Argentina", playerName: "Mario Kempes",      teamId: "arg", goals: 6  },
+  { year: 1974, host: "W. Germany", playerName: "Grzegorz Lato",    teamId: "pol", goals: 7  },
+  { year: 1970, host: "Mexico",    playerName: "Gerd Muller",       teamId: "ger", goals: 10 },
+  { year: 1966, host: "England",   playerName: "Eusebio",           teamId: "por", goals: 9  },
+  { year: 1958, host: "Sweden",    playerName: "Just Fontaine",     teamId: "fra", goals: 13 },
+];
+
 export type GoldenBootEntry = {
   playerName: string;
   teamId: string;
