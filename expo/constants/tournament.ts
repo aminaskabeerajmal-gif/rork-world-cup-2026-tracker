@@ -300,7 +300,11 @@ function buildMatches(): Match[] {
   // June 13
   add("m6",  "C", "bra", "mar", "Jun 13", "18:00", 15);
   add("m7",  "C", "hai", "sco", "Jun 13", "21:00", 13);
-  add("m8",  "D", "aus", "tur", "Jun 13", "21:00", 4);
+  add("m8",  "D", "aus", "tur", "Jun 13", "21:00", 4, "finished", 2, 1, null, [
+    { teamId: "aus", playerName: "Nestory Irankunda", minute: 18, side: "home" },
+    { teamId: "tur", playerName: "Arda Guler", minute: 44, side: "away" },
+    { teamId: "aus", playerName: "Mitchell Duke", minute: 71, side: "home" },
+  ]);
 
   // June 14
   add("m9",  "E", "ger", "cuw", "Jun 14", "15:00", 8);
