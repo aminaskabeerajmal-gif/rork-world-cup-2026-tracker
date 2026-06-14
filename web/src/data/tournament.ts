@@ -152,7 +152,12 @@ export const FORWARD_PLAYERS: Record<string, string[]> = {
   pan: ["Ismael Diaz", "Jose Fajardo"],
 };
 
-export const getTeam = (id: string): Team | undefined => TEAMS.find((t) => t.id === id);
+export const getTeam = (id: string): Team | undefined => {
+  const found = TEAMS.find((t) => t.id === id);
+  if (found) return found;
+  // Knockout placeholder — synthetic team so cards render for TBD slots
+  return { id, name: id, code: "TBD", flag: "🏴", group: "KO", confederation: "", fifaRank: 0 };
+}
 
 export const teamsInGroup = (group: string): Team[] => TEAMS.filter((t) => t.group === group);
 
@@ -192,6 +197,7 @@ function buildMatches(): Match[] {
     awayScore: number | null = null,
     minute: number | null = null,
     goalsData: Omit<GoalEvent, "id" | "matchId">[] = [],
+    stage: string = "Group Stage",
   ): void {
     const [month, day] = dateStr.split(" ");
     const monthMap: Record<string, number> = {
@@ -202,7 +208,7 @@ function buildMatches(): Match[] {
 
     out.push({
       id, group, homeId, awayId, homeScore, awayScore, status, minute,
-      stage: "Group Stage",
+      stage,
       venue: v(vidx).venue,
       city: v(vidx).city,
       kickoff,
@@ -317,6 +323,85 @@ function buildMatches(): Match[] {
   add("m70", "K", "col", "por", "Jun 29", "18:00", 9);
   add("m71", "L", "cro", "gha", "Jun 29", "21:00", 10);
   add("m72", "L", "pan", "eng", "Jun 29", "21:00", 15);
+
+  // ═══════════════════════════════════════
+  // Round of 32: June 30 – July 3
+  // ═══════════════════════════════════════
+
+  // June 30
+  add("m73", "Round of 32", "Winner A", "3rd C/E/F/H/I", "Jun 30", "15:00", 0, "upcoming", null, null, null, [], "Round of 32");
+  add("m74", "Round of 32", "Winner C", "Runner-up F", "Jun 30", "18:00", 1, "upcoming", null, null, null, [], "Round of 32");
+  add("m75", "Round of 32", "Winner E", "3rd A/B/C/D/F", "Jun 30", "21:00", 2, "upcoming", null, null, null, [], "Round of 32");
+  add("m76", "Round of 32", "Winner G", "3rd A/E/H/I/J", "Jun 30", "12:00", 3, "upcoming", null, null, null, [], "Round of 32");
+
+  // July 1
+  add("m77", "Round of 32", "Winner I", "3rd C/D/F/G/H", "Jul 1", "15:00", 4, "upcoming", null, null, null, [], "Round of 32");
+  add("m78", "Round of 32", "Winner K", "3rd D/E/I/J/L", "Jul 1", "18:00", 5, "upcoming", null, null, null, [], "Round of 32");
+  add("m79", "Round of 32", "Winner B", "3rd E/F/G/I/J", "Jul 1", "21:00", 6, "upcoming", null, null, null, [], "Round of 32");
+  add("m80", "Round of 32", "Winner D", "3rd B/E/F/I/J", "Jul 1", "12:00", 7, "upcoming", null, null, null, [], "Round of 32");
+
+  // July 2
+  add("m81", "Round of 32", "Runner-up A", "Runner-up B", "Jul 2", "15:00", 8, "upcoming", null, null, null, [], "Round of 32");
+  add("m82", "Round of 32", "Runner-up C", "Runner-up D", "Jul 2", "18:00", 9, "upcoming", null, null, null, [], "Round of 32");
+  add("m83", "Round of 32", "Runner-up E", "Runner-up F", "Jul 2", "21:00", 10, "upcoming", null, null, null, [], "Round of 32");
+  add("m84", "Round of 32", "Runner-up G", "Runner-up H", "Jul 2", "12:00", 11, "upcoming", null, null, null, [], "Round of 32");
+
+  // July 3
+  add("m85", "Round of 32", "Runner-up I", "Runner-up J", "Jul 3", "15:00", 12, "upcoming", null, null, null, [], "Round of 32");
+  add("m86", "Round of 32", "Runner-up K", "Runner-up L", "Jul 3", "18:00", 13, "upcoming", null, null, null, [], "Round of 32");
+  add("m87", "Round of 32", "Winner F", "Runner-up C", "Jul 3", "21:00", 14, "upcoming", null, null, null, [], "Round of 32");
+  add("m88", "Round of 32", "Winner H", "Runner-up J", "Jul 3", "12:00", 15, "upcoming", null, null, null, [], "Round of 32");
+
+  // ═══════════════════════════════════════
+  // Round of 16: July 4–7
+  // ═══════════════════════════════════════
+
+  // July 4
+  add("m89", "Round of 16", "Winner R32-1", "Winner R32-2", "Jul 4", "15:00", 1, "upcoming", null, null, null, [], "Round of 16");
+  add("m90", "Round of 16", "Winner R32-3", "Winner R32-4", "Jul 4", "18:00", 2, "upcoming", null, null, null, [], "Round of 16");
+
+  // July 5
+  add("m91", "Round of 16", "Winner R32-5", "Winner R32-6", "Jul 5", "15:00", 3, "upcoming", null, null, null, [], "Round of 16");
+  add("m92", "Round of 16", "Winner R32-7", "Winner R32-8", "Jul 5", "18:00", 4, "upcoming", null, null, null, [], "Round of 16");
+
+  // July 6
+  add("m93", "Round of 16", "Winner R32-9", "Winner R32-10", "Jul 6", "15:00", 5, "upcoming", null, null, null, [], "Round of 16");
+  add("m94", "Round of 16", "Winner R32-11", "Winner R32-12", "Jul 6", "18:00", 6, "upcoming", null, null, null, [], "Round of 16");
+
+  // July 7
+  add("m95", "Round of 16", "Winner R32-13", "Winner R32-14", "Jul 7", "15:00", 7, "upcoming", null, null, null, [], "Round of 16");
+  add("m96", "Round of 16", "Winner R32-15", "Winner R32-16", "Jul 7", "18:00", 8, "upcoming", null, null, null, [], "Round of 16");
+
+  // ═══════════════════════════════════════
+  // Quarter-finals: July 9–10
+  // ═══════════════════════════════════════
+
+  // July 9
+  add("m97", "Quarter-finals", "Winner R16-1", "Winner R16-2", "Jul 9", "15:00", 9, "upcoming", null, null, null, [], "Quarter-finals");
+  add("m98", "Quarter-finals", "Winner R16-3", "Winner R16-4", "Jul 9", "18:00", 10, "upcoming", null, null, null, [], "Quarter-finals");
+
+  // July 10
+  add("m99", "Quarter-finals", "Winner R16-5", "Winner R16-6", "Jul 10", "15:00", 11, "upcoming", null, null, null, [], "Quarter-finals");
+  add("m100", "Quarter-finals", "Winner R16-7", "Winner R16-8", "Jul 10", "18:00", 12, "upcoming", null, null, null, [], "Quarter-finals");
+
+  // ═══════════════════════════════════════
+  // Semi-finals: July 14
+  // ═══════════════════════════════════════
+
+  add("m101", "Semi-finals", "Winner QF-1", "Winner QF-2", "Jul 14", "15:00", 0, "upcoming", null, null, null, [], "Semi-finals");
+  add("m102", "Semi-finals", "Winner QF-3", "Winner QF-4", "Jul 14", "21:00", 5, "upcoming", null, null, null, [], "Semi-finals");
+
+  // ═══════════════════════════════════════
+  // Third Place: July 18
+  // ═══════════════════════════════════════
+
+  add("m103", "Third Place", "Loser SF-1", "Loser SF-2", "Jul 18", "15:00", 8, "upcoming", null, null, null, [], "Third Place");
+
+  // ═══════════════════════════════════════
+  // Final: July 19 — MetLife Stadium
+  // ═══════════════════════════════════════
+
+  add("m104", "Final", "Winner SF-1", "Winner SF-2", "Jul 19", "15:00", 15, "upcoming", null, null, null, [], "Final");
 
   return out;
 }

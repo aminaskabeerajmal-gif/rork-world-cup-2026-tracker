@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { MapPin } from "lucide-react";
-import { type Match, type GoalEvent, getTeam, formatKickoff } from "@/data/tournament";
+import { type Match, type GoalEvent, getTeam, GROUPS, formatKickoff } from "@/data/tournament";
 import { cn } from "@/lib/utils";
 
 type ScorerRow = { name: string; count: number; minutes: number[] };
@@ -37,7 +37,7 @@ const MatchCard = memo(({ match }: { match: Match }) => {
     <article className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-center justify-between border-b border-border/60 bg-accent/40 px-4 py-2">
         <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
-          Group {match.group}
+          {GROUPS.includes(match.group) ? `Group ${match.group}` : match.group}
         </span>
         {isLive ? (
           <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-live">

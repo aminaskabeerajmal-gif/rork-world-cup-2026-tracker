@@ -3,7 +3,7 @@ import React, { memo, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import Colors from "@/constants/colors";
-import { getTeam, GoalEvent, Match } from "@/constants/tournament";
+import { getTeam, GoalEvent, GROUPS, Match } from "@/constants/tournament";
 import LivePulse from "@/components/LivePulse";
 
 function formatTime(iso: string, tz: string, label: string): string {
@@ -117,7 +117,9 @@ function MatchCardBase({ match }: { match: Match }) {
     >
       <View style={styles.header}>
         <View style={styles.groupTag}>
-          <Text style={styles.groupTagText}>GROUP {match.group}</Text>
+          <Text style={styles.groupTagText}>
+            {GROUPS.includes(match.group) ? `GROUP ${match.group}` : match.group}
+          </Text>
         </View>
         {isLive ? (
           <View style={styles.liveBadge}>
