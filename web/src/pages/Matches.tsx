@@ -13,9 +13,20 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: "finished", label: "Results" },
 ];
 
+const KO_STAGES = [
+  "Group Stage",
+  "Round of 32",
+  "Round of 16",
+  "Quarter-finals",
+  "Semi-finals",
+  "Third Place",
+  "Final",
+];
+
 const Matches = () => {
   const [filter, setFilter] = useState<Filter>("all");
   const [group, setGroup] = useState<string | "all">("all");
+  const [stage, setStage] = useState<string | "all">("all");
   const { matches: allMatches, espnLive, refresh } = useEspnLive();
 
   const matches = useMemo<Match[]>(() => {
@@ -23,9 +34,10 @@ const Matches = () => {
       if (filter === "finished" && m.status !== "finished") return false;
       if (filter === "upcoming" && m.status === "finished") return false;
       if (group !== "all" && m.group !== group) return false;
+      if (stage !== "all" && m.stage !== stage) return false;
       return true;
     }).sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
-  }, [filter, group, allMatches]);
+  }, [filter, group, stage, allMatches]);
 
   const liveCount = useMemo(
     () => allMatches.filter((m) => m.status === "live").length,
@@ -54,7 +66,7 @@ const Matches = () => {
               </span>
             )}
             <button
-              onClick={() => { setFilter("all"); setGroup("all"); refresh(); }}
+              onClick={() => { setFilter("all"); setGroup("all"); setStage("all"); refresh(); }}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:text-foreground hover:border-foreground/20"
               title="Refresh live scores"
             >
@@ -83,12 +95,22 @@ const Matches = () => {
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          <Chip active={group === "all"} onClick={() => setGroup("all")}>
+          <Chip active={group === "all" && stage === "all"} onClick={() => { setGroup("all"); setStage("all"); }}>
             All groups
           </Chip>
           {GROUPS.map((g) => (
-            <Chip key={g} active={group === g} onClick={() => setGroup(g)}>
+            <Chip key={g} active={group === g} onClick={() => { setGroup(g); setStage("all"); }}>
               {g}
+            </Chip>
+          ))}
+          <span className="mx-1 w-px self-stretch bg-border" />
+          {KO_STAGES.map((s) => (
+            <Chip
+              key={s}
+              active={stage === s}
+              onClick={() => { setStage(stage === s ? "all" : s); setGroup("all"); }}
+            >
+              {s}
             </Chip>
           ))}
         </div>
@@ -100,9 +122,26 @@ const Matches = () => {
         </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {matches.map((m) => (
-            <MatchCard key={m.id} match={m} />
-          ))}
+          {(() => {
+            let lastStage = "";
+            const showHeaders = stage === "all" && filter === "all" && group === "all";
+            return matches.map((m) => {
+              const showHeader = m.stage !== lastStage && showHeaders;
+              lastStage = m.stage;
+              return (
+                <div key={m.id} className={cn(showHeader && "col-span-full")}>
+                  {showHeader && (
+                    <div className="pt-4 pb-1 first:pt-0">
+                      <p className="text-[11px] font-extrabold uppercase tracking-[0.15em] text-primary">
+                        {m.stage}
+                      </p>
+                    </div>
+                  )}
+                  <MatchCard match={m} />
+                </div>
+              );
+            });
+          })()}
         </div>
       )}
     </div>

@@ -24,8 +24,19 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: "finished", label: "Results" },
 ];
 
+const KO_STAGES = [
+  "Group Stage",
+  "Round of 32",
+  "Round of 16",
+  "Quarter-finals",
+  "Semi-finals",
+  "Third Place",
+  "Final",
+];
+
 export default function MatchesScreen() {
   const [filter, setFilter] = useState<Filter>("all");
+  const [stage, setStage] = useState<string>("all");
   const { matches: allMatches, resetAll } = useLiveMatch();
 
   const liveCount = useMemo(
@@ -34,14 +45,16 @@ export default function MatchesScreen() {
   );
 
   const matches = useMemo<Match[]>(() => {
-    const sorted = [...allMatches].sort((a, b) => {
+    let filtered = [...allMatches];
+    if (filter !== "all") filtered = filtered.filter((m) => m.status === filter);
+    if (stage !== "all") filtered = filtered.filter((m) => m.stage === stage);
+    filtered.sort((a, b) => {
       const order: Record<MatchStatus, number> = { live: 0, upcoming: 1, finished: 2 };
       if (order[a.status] !== order[b.status]) return order[a.status] - order[b.status];
       return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
     });
-    if (filter === "all") return sorted;
-    return sorted.filter((m) => m.status === filter);
-  }, [filter, allMatches]);
+    return filtered;
+  }, [filter, stage, allMatches]);
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -94,6 +107,22 @@ export default function MatchesScreen() {
               </TouchableOpacity>
             );
           })}
+          <View style={styles.chipDivider} />
+          {KO_STAGES.map((s) => {
+            const active = stage === s;
+            return (
+              <TouchableOpacity
+                key={s}
+                activeOpacity={0.8}
+                onPress={() => setStage(active ? "all" : s)}
+                style={[styles.chip, styles.chipStage, active && styles.chipStageActive]}
+              >
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                  {s}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </View>
 
@@ -107,7 +136,23 @@ export default function MatchesScreen() {
             <Text style={styles.emptyText}>No matches here right now.</Text>
           </View>
         ) : (
-          matches.map((m) => <MatchCard key={m.id} match={m} />)
+          (() => {
+            let lastStage = "";
+            return matches.map((m) => {
+              const showHeader = m.stage !== lastStage && stage === "all" && filter === "all";
+              lastStage = m.stage;
+              return (
+                <View key={m.id}>
+                  {showHeader && (
+                    <View style={styles.stageHeader}>
+                      <Text style={styles.stageHeaderText}>{m.stage}</Text>
+                    </View>
+                  )}
+                  <MatchCard match={m} />
+                </View>
+              );
+            });
+          })()
         )}
         <View style={{ height: 24 }} />
       </ScrollView>
@@ -218,6 +263,30 @@ const styles = StyleSheet.create({
   },
   chipTextActive: {
     color: "#FFF",
+  },
+  chipDivider: {
+    width: 2,
+    backgroundColor: Colors.border,
+    borderRadius: 1,
+  },
+  chipStage: {
+    backgroundColor: Colors.cardAlt,
+  },
+  chipStageActive: {
+    backgroundColor: Colors.gold + "22",
+    borderColor: Colors.gold,
+  },
+  stageHeader: {
+    paddingHorizontal: 4,
+    paddingTop: 8,
+    paddingBottom: 2,
+  },
+  stageHeaderText: {
+    color: Colors.green,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1,
+    textTransform: "uppercase",
   },
   list: {
     paddingHorizontal: 20,

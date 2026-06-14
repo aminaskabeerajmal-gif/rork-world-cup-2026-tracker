@@ -3,7 +3,7 @@ import React, { memo, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import Colors from "@/constants/colors";
-import { getTeam, GoalEvent, GROUPS, Match } from "@/constants/tournament";
+import { getTeam, GoalEvent, GROUPS, Match, Team } from "@/constants/tournament";
 import LivePulse from "@/components/LivePulse";
 
 function formatTime(iso: string, tz: string, label: string): string {
@@ -85,10 +85,24 @@ function useLiveMinute(kickoffISO: string, isLive: boolean): number | null {
   return isLive ? Math.floor(elapsed / 60) : null;
 }
 
+function TeamDisplay({ team, isTbd }: { team: Team; isTbd: boolean }) {
+  return (
+    <View style={styles.flagNameRow}>
+      <Text style={styles.flag}>{isTbd ? "❓" : team.flag}</Text>
+      <Text style={[styles.team, isTbd && styles.teamTbd]} numberOfLines={1}>
+        {isTbd ? "TBD" : team.name}
+      </Text>
+    </View>
+  );
+}
+
 function MatchCardBase({ match }: { match: Match }) {
   const home = getTeam(match.homeId);
   const away = getTeam(match.awayId);
   if (!home || !away) return null;
+
+  const homeIsTbd = home.code === "TBD";
+  const awayIsTbd = away.code === "TBD";
 
   const isLive = match.status === "live";
   const isFinished = match.status === "finished";
@@ -107,17 +121,20 @@ function MatchCardBase({ match }: { match: Match }) {
   const awayScorers = useMemo(() => (hasGoals ? groupGoals(match.goals, "away") : []), [match.goals, hasGoals]);
 
   const handlePress = () => {
+    if (homeIsTbd && awayIsTbd) return;
     router.push(`/live/${match.id}`);
   };
 
+  const isKnockout = match.stage !== "Group Stage";
+
   return (
     <Pressable
-      style={[styles.card, isLive && styles.cardLive]}
+      style={[styles.card, isLive && styles.cardLive, isKnockout && styles.cardKnockout]}
       onPress={handlePress}
     >
       <View style={styles.header}>
-        <View style={styles.groupTag}>
-          <Text style={styles.groupTagText}>
+        <View style={[styles.groupTag, isKnockout && styles.groupTagKnockout]}>
+          <Text style={[styles.groupTagText, isKnockout && styles.groupTagTextKnockout]}>
             {GROUPS.includes(match.group) ? `GROUP ${match.group}` : match.group}
           </Text>
         </View>
@@ -137,12 +154,8 @@ function MatchCardBase({ match }: { match: Match }) {
 
       <View style={styles.body}>
         <View style={[styles.side, styles.sideColumn]}>
-          <View style={styles.teamRow}>
-            <Text style={styles.flag}>{home.flag}</Text>
-            <Text style={[styles.team, homeWin && styles.teamWin]} numberOfLines={1}>
-              {home.name}
-            </Text>
-          </View>
+          <TeamDisplay team={home} isTbd={homeIsTbd} />
+          {homeWin && !homeIsTbd && <View style={styles.winDot} />}
           {hasGoals && homeScorers.length > 0 && (
             <View style={styles.scorersInline}>
               {homeScorers.map((s) => (
@@ -173,11 +186,9 @@ function MatchCardBase({ match }: { match: Match }) {
 
         <View style={[styles.side, styles.sideColumn, styles.sideRight]}>
           <View style={[styles.teamRow, styles.teamRowRight]}>
-            <Text style={[styles.team, styles.teamRight, awayWin && styles.teamWin]} numberOfLines={1}>
-              {away.name}
-            </Text>
-            <Text style={styles.flag}>{away.flag}</Text>
+            <TeamDisplay team={away} isTbd={awayIsTbd} />
           </View>
+          {awayWin && !awayIsTbd && <View style={[styles.winDot, styles.winDotRight]} />}
           {hasGoals && awayScorers.length > 0 && (
             <View style={[styles.scorersInline, styles.scorersInlineRight]}>
               {awayScorers.map((s) => (
@@ -231,6 +242,37 @@ const styles = StyleSheet.create({
   cardLive: {
     borderColor: "rgba(224,36,75,0.45)",
     backgroundColor: "#FFF5F5",
+  },
+  cardKnockout: {
+    borderColor: Colors.greenDim,
+    borderStyle: "dashed" as const,
+  },
+  flagNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  teamTbd: {
+    color: Colors.textDim,
+    fontStyle: "italic",
+  },
+  winDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.gold,
+    marginLeft: 40,
+    marginTop: -2,
+  },
+  winDotRight: {
+    marginLeft: 0,
+    marginRight: 40,
+  },
+  groupTagKnockout: {
+    backgroundColor: Colors.greenDim,
+  },
+  groupTagTextKnockout: {
+    color: Colors.green,
   },
   header: {
     flexDirection: "row",

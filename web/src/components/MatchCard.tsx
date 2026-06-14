@@ -26,6 +26,10 @@ const MatchCard = memo(({ match }: { match: Match }) => {
   const away = getTeam(match.awayId);
   if (!home || !away) return null;
 
+  const homeIsTbd = home.code === "TBD";
+  const awayIsTbd = away.code === "TBD";
+  const isKnockout = match.stage !== "Group Stage";
+
   const { et, ist } = formatKickoff(match.kickoff);
   const isFinished = match.status === "finished";
   const isLive = match.status === "live";
@@ -34,9 +38,15 @@ const MatchCard = memo(({ match }: { match: Match }) => {
   const awayScorers = isFinished ? groupBySide(match.goals, "away") : [];
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition-shadow hover:shadow-md">
+    <article className={cn(
+      "overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition-shadow hover:shadow-md",
+      isKnockout && "border-dashed border-primary/30"
+    )}>
       <div className="flex items-center justify-between border-b border-border/60 bg-accent/40 px-4 py-2">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
+        <span className={cn(
+          "text-[11px] font-bold uppercase tracking-wider",
+          isKnockout ? "text-primary" : "text-primary"
+        )}>
           {GROUPS.includes(match.group) ? `Group ${match.group}` : match.group}
         </span>
         {isLive ? (
@@ -61,10 +71,11 @@ const MatchCard = memo(({ match }: { match: Match }) => {
 
       <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 px-4 py-4">
         <TeamSideWithScorers
-          name={home.name}
-          flag={home.flag}
+          name={homeIsTbd ? "TBD" : home.name}
+          flag={homeIsTbd ? "❓" : home.flag}
           align="start"
           scorers={homeScorers}
+          isTbd={homeIsTbd}
         />
         <div className="flex min-w-[68px] flex-col items-center pt-1">
           {isFinished || isLive ? (
@@ -80,10 +91,11 @@ const MatchCard = memo(({ match }: { match: Match }) => {
           )}
         </div>
         <TeamSideWithScorers
-          name={away.name}
-          flag={away.flag}
+          name={awayIsTbd ? "TBD" : away.name}
+          flag={awayIsTbd ? "❓" : away.flag}
           align="end"
           scorers={awayScorers}
+          isTbd={awayIsTbd}
         />
       </div>
 
@@ -107,11 +119,13 @@ function TeamSideWithScorers({
   flag,
   align,
   scorers,
+  isTbd = false,
 }: {
   name: string;
   flag: string;
   align: "start" | "end";
   scorers: ScorerRow[];
+  isTbd?: boolean;
 }) {
   return (
     <div
@@ -126,8 +140,11 @@ function TeamSideWithScorers({
           align === "end" ? "flex-row-reverse text-right" : "text-left"
         )}
       >
-        <span className="text-3xl leading-none">{flag}</span>
-        <span className="text-sm font-bold leading-tight text-foreground">{name}</span>
+        <span className={cn("text-3xl leading-none", isTbd && "opacity-40")}>{flag}</span>
+        <span className={cn(
+          "text-sm font-bold leading-tight text-foreground",
+          isTbd && "italic text-muted-foreground"
+        )}>{name}</span>
       </div>
       {scorers.length > 0 && (
         <div className={cn("flex flex-col gap-0.5", align === "end" ? "items-end" : "items-start")}>
